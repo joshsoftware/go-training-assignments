@@ -86,14 +86,6 @@ func checkPossibilites()bool{
 	return true
 }
 
-//Prints the matrix
-func printMatrix(){
-	for _,v:=range matrix{
-		fmt.Println(v)
-	}
-}
-
-
 //In case checkPossibilities fails at a cell, this resets the matrix to the 
 //previous cell and uses the lastValidPossibilitiesMatrix to move to try the 
 //next option
@@ -107,6 +99,82 @@ func regress(i, j int){
 		lastValidPossibilitiesMatrix[i][j-1]=lastValidPossibilitiesMatrix[i][j-1][1:]
 	}
 	regressed = true
+}
+
+func removeOld(arr *[]string, str string){
+	var cleanedArr = []string{}
+	for _,v:=range *arr{
+		if(v != str){
+			cleanedArr = append(cleanedArr, v)
+		}
+	}
+	*arr=cleanedArr
+}
+
+func generateMatrix(){
+	//Sets the initial possibilities matrix
+	checkPossibilites()
+
+	regress:
+	for i, row:= range matrix {
+		for j, cell:= range row {
+			//Only executes the code if the cell is empty
+			if cell == ""{
+				//If the regressed flag is true, it uses the lastValidPossibilitiesMatrix
+				//to evaluate new possibilities.
+				if(regressed){
+					//If the length of the lastValidPossibilitiesMatrix is 0,
+					//It will regress one step further and skip the rest of the process
+					if(len(lastValidPossibilitiesMatrix[i][j]) == 0){
+						regress(i,j)
+						goto regress
+					}
+
+					for _,poss:=range lastValidPossibilitiesMatrix[i][j]{
+						//Assigns the current possibility to the matrix cell
+						matrix[i][j] = poss
+						//Checks possibilities for new value of the cell
+						valid:=checkPossibilites()
+						//If a valid possibility is found, moves to the next cell
+						if(valid){
+							regressed = false
+							break
+						}
+						//If no options are valid, regresses to previous cell
+						if(len(lastValidPossibilitiesMatrix[i][j]) == 1){
+							regress(i,j)
+							goto regress
+						}
+					}
+				} else {
+					//If regressed is false, the possibilitiesMatrix is used for 
+					//evaluating possibilities
+					for _,poss:= range possibilitiesMatrix[i][j]{
+						//This stores the current possibilites for the cell into lastValidPossibilitiesMatrix.
+						//If a possibility is valid, this valid will be saved in the lastValidMatrix
+						lastValidPossibilitiesMatrix[i][j] = possibilitiesMatrix[i][j]
+						//Assigns the current possibility to the matrix cell
+						matrix[i][j] = poss
+						//Checks possibilities for new value of the cell
+						valid:=checkPossibilites()
+						//If a valid possibility is found, moves to the next cell
+						if(valid){
+							break;
+						} 
+						//If no options are valid, regresses to previous cell
+						if(len(possibilitiesMatrix[i][j]) == 1){
+							regress(i,j)
+							goto regress
+						}
+					}
+				}
+			}
+		}
+	}	
+	fmt.Println("Another matrix")
+	for _,v:=range matrix{
+		fmt.Println(v)
+	}
 }
 
 func main(){
@@ -173,5 +241,46 @@ func main(){
 	fmt.Printf("You have a sudoku matrix!\n")
 	for _,v:=range matrix{
 		fmt.Println(v)
+	}
+	for _,v:=range lastValidPossibilitiesMatrix{
+		fmt.Println(v)
+	}
+
+	for i:=8;i>=0;i--{
+		for j:=8;j>=0;j--{
+			fmt.Println("Running", i, j)
+			possibilities:=&lastValidPossibilitiesMatrix[i][j]
+			if(len(*possibilities) == 1){
+				matrix[i][j]=""
+			}
+			if(len(*possibilities) > 1){
+				removeOld(possibilities,matrix[i][j])
+				for _,poss:=range *possibilities{
+					matrix[i][j]=poss	
+					valid:=checkPossibilites()
+					if(!valid){
+						fmt.Println("INVALID")
+						for _,v:=range matrix{
+							fmt.Println(v)
+						}
+						for _,v:=range possibilitiesMatrix{
+							fmt.Println(v)
+						}
+					}
+					if(valid){
+						fmt.Println("VALID")
+						// for _,v:=range possibilitiesMatrix{
+						// 	fmt.Println(v)
+						// }
+						generateMatrix()
+						for row:=i;row<9;row++{
+							for col:=j;col<9;col++{
+								matrix[row][col]=""
+							}
+						}
+					}
+				}
+			}	
+		}
 	}
 }
