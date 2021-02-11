@@ -92,7 +92,7 @@ func main() {
 // ==================================================================
 // OUTPUT
 
-// akansha@akansha-Latitude-3490:~/golang/assignments$ go run main.go
+// akansha@akansha-Latitude-3490:~/golang/assignments$ go run AkanshaKumari/tic_tac_toe.go
 // Player  X 's turn
 // Enter space seperated x y co-ordinates
 // 0 0
